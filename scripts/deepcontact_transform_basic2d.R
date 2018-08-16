@@ -28,6 +28,7 @@ deepcontact_transform_basic2d = function(PWI,
   
   
   require(gdata)
+  require(cowplot)
   
   #setup deep contact
   Sys.setenv(PYTHONPATH = deepcontact_dir)
