@@ -45,7 +45,7 @@ deepcontact_transform_basic2d = function(PWI,
                                Pos2 = rep(unique_pos,each=protein_length))
   
   #find interaction score columns for evaluation
-  eval_cols = setdiff(names(contacts),c("Pos1","Pos2","WT_AA1","WT_AA2","NposE","NnegE"))
+  eval_cols = setdiff(names(PWI),c("Pos1","Pos2","WT_AA1","WT_AA2","NposE","NnegE"))
   
   for (i in seq_along(eval_cols)) {
     setkey(PWI,Pos1,Pos2)
