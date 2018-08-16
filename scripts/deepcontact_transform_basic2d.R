@@ -70,6 +70,7 @@ deepcontact_transform_basic2d = function(PWI,
     }
     
     #write to file
+    system(command = paste0("mkdir ",deepcontact_dir,"ccmpred_only/"),wait=T)
     write.table(helper,file = paste0(deepcontact_dir,"ccmpred_only/tmp.ccmpred"),
                 quote = F,sep = "\t",row.names = F,col.names = F)
     
