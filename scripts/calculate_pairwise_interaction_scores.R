@@ -4,11 +4,12 @@
 ############################################################
 
 calculate_pairwise_interaction_scores = function(double_data,
-                                                  N_resample = 10^4,
-                                                  modus = "cis",
-                                                  dataset_dir,
-                                                  output_filename = "DMS_PWI.txt",
-                                                  detailed = F) {
+                                                 N_resample = 10^4,
+                                                 modus = "cis",
+                                                 dataset_dir,
+                                                 output_filename = "DMS_PWI.txt",
+                                                 diagonal_entries = "one",
+                                                 detailed = F) {
   
   ### variables 
   # double_data: the doubles data.table
@@ -16,9 +17,12 @@ calculate_pairwise_interaction_scores = function(double_data,
   # dataset_dir: dataset directory, like "GB1/", it will put results dataset_dir/results/PWI/
   # output_filename: filename to write datatable to in dataset_dir/processed_data/
   # modus: "cis" (single protein) or "trans" (protein-protein interaction)
+  # diagonal_entries: what the diagonal entries should be when filling up symmetric enrichment matrices
+  #                   - one: sets diagonal to 1 (default); however, in data with very sparse epistatic interactions, this will give a high bias for poisition pairs with high enrichments to also have high correlations
+  #                   - means: use mean enrichment over all pairs a position is involved in
   # detailed: if FALSE, it will only give epistasis, association and combined scores as outputs; 
   #           if TRUE, it will output all the intermediate scores and their uncertainities; see below in the script for naming conventions
-
+  
   set.seed(seed=1603)
   
   require(data.table)
@@ -101,8 +105,11 @@ calculate_pairwise_interaction_scores = function(double_data,
     posE_enr_matrix = matrix(posE_enr_rs[,i],nrow=diff(pos_range)+1) + quantile(posE_enr_rs[,i],probs = 0.25,na.rm=T)
     
     if (modus == "cis") {
-      ## set diagonal to 1
-      diag(posE_enr_matrix) = 1
+      if (diagonal_entries == "one") {## set diagonal to 1
+        diag(posE_enr_matrix) = 1
+      } else if (diagonal_entries ==  "means") {
+        diag(posE_enr_matrix) = rowMeans(posE_enr_matrix,na.rm=T)
+      }
     }
     ### calculate correlation on log values
     if (do.transpose == T) {
@@ -124,15 +131,18 @@ calculate_pairwise_interaction_scores = function(double_data,
     do.transpose = F
     posE2_cor_rs = sapply(1:N_resample,posE_cor)
   }
-    
+  
   ######### partial correlation of positive epistasis patterns
   posE_pcor = function(i) {
     require(corpcor)
     ## add "pseudocount" for logging
     posE_enr_matrix = matrix(posE_enr_rs[,i],nrow=diff(pos_range)+1) + quantile(posE_enr_rs[,i],probs = 0.25,na.rm=T)
     if (modus == "cis") {
-      ## set diagonal to 1
-      diag(posE_enr_matrix) = 1
+      if (diagonal_entries == "one") {## set diagonal to 1
+        diag(posE_enr_matrix) = 1
+      } else if (diagonal_entries ==  "means") {
+        diag(posE_enr_matrix) = rowMeans(posE_enr_matrix,na.rm=T)
+      }
     }
     ### calculate correlation on log values
     if (do.transpose == T) {
@@ -183,7 +193,11 @@ calculate_pairwise_interaction_scores = function(double_data,
     ## add "pseudocount" for logging
     negE_enr_matrix = matrix(negE_enr_rs[,i],nrow=diff(pos_range)+1) + quantile(negE_enr_rs[,i],probs = 0.25,na.rm=T)
     if (modus == "cis") {# set diagonal to 1
-      diag(negE_enr_matrix) = 1
+      if (diagonal_entries == "one") {## set diagonal to 1
+        diag(negE_enr_matrix) = 1
+      } else if (diagonal_entries ==  "means") {
+        diag(negE_enr_matrix) = rowMeans(negE_enr_matrix,na.rm=T)
+      }
     }
     ### calculate correlation on log values
     if (do.transpose == T) {
@@ -209,8 +223,12 @@ calculate_pairwise_interaction_scores = function(double_data,
     require(corpcor)
     ## add "pseudocount" for logging
     negE_enr_matrix = matrix(negE_enr_rs[,i],nrow=diff(pos_range)+1) + quantile(negE_enr_rs[,i],probs = 0.25,na.rm=T)
-    if (modus == "cis") {# set diagonal to 1
-      diag(negE_enr_matrix) = 1
+    if (modus == "cis") {
+      if (diagonal_entries == "one") {## set diagonal to 1
+        diag(negE_enr_matrix) = 1
+      } else if (diagonal_entries ==  "means") {
+        diag(negE_enr_matrix) = rowMeans(negE_enr_matrix,na.rm=T)
+      }
     }
     ### calculate correlation on log values
     if (do.transpose == T) {
@@ -345,18 +363,18 @@ calculate_pairwise_interaction_scores = function(double_data,
   }
   
   if (detailed) {
-      PWI2 = PWI
+    PWI2 = PWI
   } else {
     if (modus=="cis") {
       PWI2 = PWI[,.(Pos1,Pos2,WT_AA1,WT_AA2,NposE,NnegE,
-                   epistasis_score,
-                   association_score,
-                   combined_score)]
+                    epistasis_score,
+                    association_score,
+                    combined_score)]
     } else {
       PWI2 = PWI[,.(Pos1,Pos2,WT_AA1,WT_AA2,NposE,NnegE,
-                   epistasis_score,
-                   association_score1,
-                   association_score2)]
+                    epistasis_score,
+                    association_score1,
+                    association_score2)]
     }
   }
   
