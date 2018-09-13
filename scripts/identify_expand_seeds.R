@@ -19,8 +19,8 @@ identify_expand_seeds = function(any_strand,seed_size = 3,p_threshold = 0.05,bri
     extension = 0
     while (extension <= max_extension) {
       
-      psum_down = any_strand_temp[pos %in% positions_down & !is.na(p_ind),ifelse(.N>1,sumlog(p_ind)$p,p_ind)]
-      psum_up = any_strand_temp[pos %in% positions_up & !is.na(p_ind),ifelse(.N>1,sumlog(p_ind)$p,p_ind)]
+      psum_down = any_strand_temp[pos %in% positions_down & !is.na(p_ind),if(.N>1){sumlog(p_ind)$p}else{p_ind}]
+      psum_up = any_strand_temp[pos %in% positions_up & !is.na(p_ind),if(.N>1){sumlog(p_ind)$p}else{p_ind}]
       if (psum_down < min(psum,psum_up)) {
         positions = positions_down
         psum = psum_down
