@@ -57,7 +57,7 @@ predict_secondary_structure_elements = function(PWI,
       ####################################
       
       # compute kernel weights
-      ss_data[,alpha_weight := NULL]
+      if (i > pos_range[1]) {ss_data[,alpha_weight := NULL]}
       ss_data[ham_perp <= 5 & ham_diag < 12,alpha_weight := (cos(ham_perp*2*pi/3.6)+1/3) * exp(-scale_long*ham_diag^2)]
       ss_data[Pos1==Pos2,alpha_weight := NA]
       ss_data[is.na(input),alpha_weight := NA]
@@ -79,7 +79,7 @@ predict_secondary_structure_elements = function(PWI,
       ####################################
       
       # compute kernel weights
-      ss_data[,beta_weight := NULL]
+      if (i > pos_range[1]) {ss_data[,beta_weight := NULL]}
       ss_data[ham_perp <= 2,beta_weight := ((ham_perp+1) %% 2 - 1/3)*exp(-scale_long*ham_diag^2)]
       ss_data[ham_perp == 0,beta_weight := beta_weight * 2]
       ss_data[Pos1==Pos2,beta_weight := NA]
@@ -237,7 +237,7 @@ predict_secondary_structure_elements = function(PWI,
         ss_data[,ham_perp := abs(Pos1-i - (Pos2-j))]
         ss_data[,ham_diag := abs(Pos1-i + Pos2-j)]
         
-        ss_data[,weight := NULL]
+        ss_data[,weight := NA]
         ss_data[ham_perp==0,weight := exp(-scale_long*ham_diag^2)]
         ss_data[Pos1==Pos2,weight := NA]
         ss_data[is.na(input),weight := NA]
