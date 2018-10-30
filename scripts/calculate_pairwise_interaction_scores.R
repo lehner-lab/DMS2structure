@@ -22,9 +22,7 @@ calculate_pairwise_interaction_scores = function(double_data,
   #                   - means: use mean enrichment over all pairs a position is involved in
   # detailed: if FALSE, it will only give epistasis, association and combined scores as outputs; 
   #           if TRUE, it will output all the intermediate scores and their uncertainities; see below in the script for naming conventions
-  
-  set.seed(seed=1603)
-  
+    
   require(data.table)
   require(stringr)
   require(gdata)
@@ -94,6 +92,7 @@ calculate_pairwise_interaction_scores = function(double_data,
     #output linearized matrix
     return(c(posE_enr_matrix))
   }
+  clusterSetRNGStream(cl = clust,1234567)
   clusterExport(clust, list("A","prior_posE","pseq","modus","pos_range"),envir = environment())
   posE_enr_rs = parSapply(clust,1:N_resample,posE_enr) #this is a position X #resampling matrix
   
@@ -184,6 +183,7 @@ calculate_pairwise_interaction_scores = function(double_data,
     }
     return(c(negE_enr_matrix))
   }
+  clusterSetRNGStream(cl = clust,1234567)
   clusterExport(clust, list("A","prior_negE","pseq","modus","pos_range"),envir = environment())
   negE_enr_rs = parSapply(clust,1:N_resample,negE_enr)
   
