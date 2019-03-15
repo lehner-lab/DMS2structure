@@ -338,35 +338,3 @@ score_vs_distance_scatter(contacts = PWI,
                           contactmap = contactmap[,.(Pos1,Pos2,scHAmin)],
                           dataset_dir = dataset_dir,
                           prefix = prefix)
-
-
-################################
-### contacts vs PDB ############
-################################
-
-evaluate_contacts_vs_PDB(contacts = PWI[,.(Pos1,Pos2,
-                                           epistasis = posE_negE_enr,association = posE_negE_pcor,combined = posE_negE_pcor_enr,
-                                           negE_epistasis = negE_enr,negE_association = negE_pcor, negE_combined = negE_pcor_enr,
-                                           posE_epistasis = posE_enr,posE_association = posE_pcor, posE_combined = posE_pcor_enr)],
-                         contactmap = contactmap[,.(Pos1,Pos2,scHAmin)],
-                         secondary_structure=NA,
-                         dataset_dir = dataset_dir,lindist=5,
-                         prefix = prefix)
-evaluate_contacts_vs_PDB(contacts = PWI[Pos1 != 14 & Pos2 != 14,.(Pos1 = ifelse(Pos1 < 14,Pos1,Pos1-1),
-                                                                  Pos2 = ifelse(Pos2 < 14,Pos2,Pos2-1),
-                                           epistasis = posE_negE_enr,association = posE_negE_pcor,combined = posE_negE_pcor_enr,
-                                           negE_epistasis = negE_enr,negE_association = negE_pcor, negE_combined = negE_pcor_enr,
-                                           posE_epistasis = posE_enr,posE_association = posE_pcor, posE_combined = posE_pcor_enr)],
-                         contactmap = contactmap[,.(Pos1,Pos2,scHAmin)],
-                         secondary_structure=NA,
-                         dataset_dir = dataset_dir,lindist=5,
-                         prefix = paste0(prefix,"m14_"))
-
-contacts_vs_distance_scatter(contacts = PWI[,.(Pos1,Pos2,
-                                               epistasis = posE_negE_enr,association = posE_negE_pcor,combined = posE_negE_pcor_enr,
-                                               negE_epistasis = negE_enr,negE_association = negE_pcor, negE_combined = negE_pcor_enr,
-                                               posE_epistasis = posE_enr,posE_association = posE_pcor, posE_combined = posE_pcor_enr)],
-                             contactmap = contactmap[,.(Pos1,Pos2,dist)],
-                             dataset_dir = dataset_dir,
-                             prefix = prefix)
-
