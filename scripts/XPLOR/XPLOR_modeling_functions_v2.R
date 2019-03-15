@@ -69,7 +69,7 @@ XPLOR_modeling = function(varlist) {
   #remove large output files from XPLOR modeling after simulations are done
   system(paste0("rm ",varlist$folder,"*.out*"))
   # and remove all structural models in the XPLOR output folder
-  system(command = paste0("rm -rf ",varlist$folder,"XPLOR_output/"))
+  # system(command = paste0("rm -rf ",varlist$folder,"XPLOR_output/"))
 } 
 
 write_contact_NOE_restraints = function(varlist,stage){
@@ -239,7 +239,7 @@ read_PDBfiles_violations= function(varlist,stage) {
     helper_DT[,pdb_id := anneal_pdb[i]]
     
     #read TM score and TM RMSD calc
-    TM_file=system(command = paste0("TMscore.jar/TMscore ",varlist$pdb_file," ",varlist$folder,"XPLOR_output/",anneal_pdb[i]),inter=T)
+    TM_file=system(command = paste0("TMscore ",varlist$pdb_file," ",varlist$folder,"XPLOR_output/",anneal_pdb[i]),inter=T)
     helper_DT[,TM_score := as.numeric(unlist(strsplit(TM_file[grep(TM_file,pattern="^TM-score")],split = "\\s+"))[3])]
     helper_DT[,TM_RMSD := as.numeric(unlist(strsplit(TM_file[grep(TM_file,pattern="^RMSD")],split = "\\s+"))[6])]
     

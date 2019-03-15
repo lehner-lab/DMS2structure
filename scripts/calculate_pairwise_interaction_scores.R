@@ -3,13 +3,15 @@
 ### calculate pairwise interaction scores via resampling ###
 ############################################################
 
-calculate_pairwise_interaction_scores = function(double_data,
-                                                 N_resample = 10^4,
-                                                 modus = "cis",
-                                                 dataset_dir,
-                                                 output_filename = "DMS_PWI.txt",
-                                                 diagonal_entries = "one",
-                                                 detailed = F) {
+calculate_pairwise_interaction_scores = function(
+  double_data,
+  N_resample = 10^4,
+  modus = "cis",
+  dataset_dir,
+  output_filename = "DMS_PWI.txt",
+  diagonal_entries = "one",
+  detailed = F,
+  cores = NULL) {
   
   ### variables 
   # double_data: the doubles data.table
@@ -22,7 +24,8 @@ calculate_pairwise_interaction_scores = function(double_data,
   #                   - means: use mean enrichment over all pairs a position is involved in
   # detailed: if FALSE, it will only give epistasis, association and combined scores as outputs; 
   #           if TRUE, it will output all the intermediate scores and their uncertainities; see below in the script for naming conventions
-    
+  # cores: number of cores to request on the computing cluster
+
   require(data.table)
   require(stringr)
   require(gdata)
@@ -65,6 +68,9 @@ calculate_pairwise_interaction_scores = function(double_data,
   ### calculate/resample interaction scores in parallel
   require(parallel)
   no_cores <- detectCores()-1
+  if(!is.null(cores)){
+    no_cores <- cores
+  }
   clust <- makeCluster(no_cores)
   
   ######### positive epistasis enrichment

@@ -1,3 +1,4 @@
+
 XPLOR_wrapper = function(input_PWI,
                          SS_mode = "SSonly",
                          input_SS_file,
@@ -16,7 +17,9 @@ XPLOR_wrapper = function(input_PWI,
                          cluster_dir,
                          reporting_email = NA,
                          login_serveraddress,
-                         debug_this = F) {
+                         debug_this = F,
+                         linear_dist = 5,
+                         dist_restraint = 8) {
   
   #these scripts are multi-level wrapper functions to run XPLOR-NIH on a compute cluster
   #they locally create/modify the necessary scripts and folder structure, and scp this to the cluster, then remotely execute parallel jobs
@@ -43,9 +46,10 @@ XPLOR_wrapper = function(input_PWI,
   # home_dir: a directory on local machine in which a "tmp" folder is create to build the script/folder structure locally then copy to cluster; this is removed at the end of the script; could be "/Users/me/"
   # cluster_dir: (main) directory on the compute cluster into which the folder structure should be copied and where the simulations are executed
   # reporting_email: if not NA: email to report to about job status for qsub system
-  # login_serveraddres: mylogin@serveraddress.com
-  # debug this: if TRUE, script will stop at certain points for debugging
-  
+  # login_serveraddress: mylogin@serveraddress.com
+  # debug_this: if TRUE, script will stop at certain points for debugging
+  # linear_dist: minimum linear (residue) distance for defining top predicted contacts
+  # dist_restraint: distance restraint (in Angstrom) for top predicted contacts
   
   require(data.table)
   require(ssh.utils)
@@ -139,7 +143,7 @@ XPLOR_wrapper = function(input_PWI,
         secondary_structure = error
       }
       varlist$SS_pred[,rleidx := rleid(ss)]
-    } else { ## SS_mode == "SSsheets"; also include beta sheet hbonding
+    } else if (SS_mode == "SSsheets") { ## also include beta sheet hbonding
       
       ### secondary structure and beta sheet hbonding
       if (varlist$predictor == "control") {
@@ -200,8 +204,8 @@ XPLOR_wrapper = function(input_PWI,
     }
     
     ###### define restraints from top predicted contacts (Cbeta distances) ###### 
-    # get scores for predictor (only those > 5 apart in linear sequence)
-    PWI = input_PWI[Pos1 < Pos2-5,cbind(Pos1,Pos2,WT_AA1,WT_AA2,.SD),,.SDcols = varlist$predictor]
+    # get scores for predictor (only those > linear_dist apart in linear sequence)
+    PWI = input_PWI[Pos1 < Pos2-linear_dist,cbind(Pos1,Pos2,WT_AA1,WT_AA2,.SD),,.SDcols = varlist$predictor]
     names(PWI)[5] = "score"
     
     #exclude contacts within predicted secondary structure
@@ -210,9 +214,9 @@ XPLOR_wrapper = function(input_PWI,
     }
     if (varlist$predictor == "control") {
       set.seed(seed=1603)
-      helper = PWI[Pos1<Pos2-5 & score==T][sample(1:.N,((varlist$protein_length-5)*varlist$L))]
+      helper = PWI[Pos1<Pos2-linear_dist & score==T][sample(1:.N,((varlist$protein_length-linear_dist)*varlist$L))]
     } else {
-      helper = PWI[Pos1<Pos2-5][order(-score)][1:((varlist$protein_length-5)*varlist$L)]
+      helper = PWI[Pos1<Pos2-linear_dist][order(-score)][1:((varlist$protein_length-linear_dist)*varlist$L)]
     }
     helper[,':=' (atom1 = "cb",atom2 = "cb")]
     helper[WT_AA1 == "G",atom1 := "ca"]
@@ -220,7 +224,7 @@ XPLOR_wrapper = function(input_PWI,
     if (nrow(helper) > 0) {
       varlist$NOE_DT[[1]] = rbind(varlist$NOE_DT[[1]], data.table(weight=helper[,score/mean(score)],Pos1 = helper$Pos1,Pos2 = helper$Pos2,
                                                                   atom1 = helper$atom1,atom2 = helper$atom2,
-                                                                  dist = 8, lower_dist=8, upper_dist=0,
+                                                                  dist = dist_restraint, lower_dist=dist_restraint, upper_dist=0,
                                                                   Pos1_opt2 = NA, Pos2_opt2 = NA, atom1_opt2 = NA,atom2_opt2 = NA, type = "contact"))
     }
     

@@ -34,8 +34,6 @@ pairdistances_from_PDB_crystal = function(input_file,
   pdb_tab <- read.pdb(input_file)
   #Get all atoms
   temp_atoms <- pdb_tab$atoms[pdb_tab$atoms$recname %in% atom_lns,]
-  #Get first monomer
-  temp_atoms_mer1 <- temp_atoms[1:which(temp_atoms$resid[-1] < rev(rev(temp_atoms$resid)[-1]))[1],]
   #Convert structure into "pseudomonomer" (residue ids stricly ascending and same chain)
   resid_rle <- rle(temp_atoms$resid)
   pdb_tab$atoms[pdb_tab$atoms$recname %in% atom_lns,]$resid <- rep(resid_rle$values[1]:(resid_rle$values[1]+length(resid_rle$values)-1), times = resid_rle$lengths)

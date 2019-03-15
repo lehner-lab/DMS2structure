@@ -9,7 +9,8 @@ predict_secondary_structure_elements = function(PWI,
                                            seed_size=3,
                                            p_detection_threshold = 0.05,
                                            Nsamples = 10000,
-                                           debug_this = F) {
+                                           debug_this = F,
+                                           return_list = F) {
   
   ### variables 
   # PWI: pairwise interaction score data.table; except for Pos1 and Pos2 this should only contain the scores that SS elements should be predicted from
@@ -21,7 +22,8 @@ predict_secondary_structure_elements = function(PWI,
   # p_detection_threshold: p-value threshold for calling a SS element
   # Nsamples: number of randomized controls to compare SS propensity against
   # debug_this: if TRUE, function will stop at certain points in scripts in order to understand bugs
-  
+  # return_list: if TRUE, ggplot2 and ss_data objects returned in addition to predicted secondary_structure (in named list)
+
   
   require(data.table)
   require(ggplot2)
@@ -29,7 +31,12 @@ predict_secondary_structure_elements = function(PWI,
   
   #which scores should be used for prediction?
   eval_cols = setdiff(names(PWI),c("Pos1","Pos2","WT_AA1","WT_AA2","NposE","NnegE"))
-  
+
+  #Initialise list of returned data
+  saved_objects <- list(
+    "plot_objects" = list(), 
+    "secondary_structure_score" = list())
+
   for (eval_cols_idx in seq_along(eval_cols)) {
     print(eval_cols[eval_cols_idx])
     ss_data = copy(PWI[Pos1<=Pos2,.(Pos1,Pos2,input = .SD),,.SDcols = eval_cols[eval_cols_idx]])  
@@ -167,7 +174,10 @@ predict_secondary_structure_elements = function(PWI,
     helper = identify_expand_seeds(ss_strands[,.(pos=Pos1,p_ind=beta_p,p_seed = beta_p_seed)],seed_size,p_detection_threshold)
     #merge
     ss_strands = merge(ss_strands,helper[,.(Pos1=pos,beta_strand=strand,beta_strand_p=p_strand)],by="Pos1")
-    
+    #Save
+    if(return_list){
+      saved_objects[["secondary_structure_score"]][[eval_cols[eval_cols_idx]]] <- copy(ss_strands)
+    }
     
     ### record predictions across input data
     if (eval_cols_idx == 1) {
@@ -237,7 +247,7 @@ predict_secondary_structure_elements = function(PWI,
         ss_data[,ham_perp := abs(Pos1-i - (Pos2-j))]
         ss_data[,ham_diag := abs(Pos1-i + Pos2-j)]
         
-        ss_data[,weight := NA]
+        ss_data[,weight := as.double(NA)]
         ss_data[ham_perp==0,weight := exp(-scale_long*ham_diag^2)]
         ss_data[Pos1==Pos2,weight := NA]
         ss_data[is.na(input),weight := NA]
@@ -276,11 +286,21 @@ predict_secondary_structure_elements = function(PWI,
     plot_grid(P1,P2,nrow=1)
     
     ggsave(file=paste0(dataset_dir,"results/secondary_structure/",prefix,eval_cols[eval_cols_idx],"_SSelements.pdf"),width=8.5,height=4)
-    
+
+    if(return_list){
+      saved_objects[["plot_objects"]][[eval_cols[eval_cols_idx]]] <- list("P1" = P1, "P2" = P2)
+    }
   }
   
   write.table(paste0(dataset_dir,"processed_data/",prefix,"secondary_structure_prediction.txt"),
               x = secondary_structure,quote = F,row.names = F,col.names = T)
   
-  return(secondary_structure)
+  #Return objects
+  if(return_list){
+    saved_objects[["secondary_structure"]] <- secondary_structure
+    return(saved_objects)
+  }else{
+    return(secondary_structure)
+  }
 }
+
