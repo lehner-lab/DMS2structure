@@ -1,6 +1,6 @@
 # DMS2structure
 
-These are scripts used for the analysis of deep mutational scanning data in Schmiedel & Lehner, bioRxiv 2018 (https://www.biorxiv.org/content/early/2018/04/20/303875)  
+These are scripts used for the analysis of deep mutational scanning data in Schmiedel & Lehner, "Determining protein structures using deep mutagenesis", Nature Genetics (2019) (https://www.nature.com/articles/s41588-019-0431-x)  
 
 The DATASET_pipeline.R scripts do the complete analysis for one dataset, the necessary data are already deposited in the [dataset_folder]/dataset/ folder, except for the WW domain, for which the sequencing data has to be downloaded and processed separately (as described in the pipeline script).  
 
